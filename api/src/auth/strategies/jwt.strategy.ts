@@ -15,13 +15,16 @@ interface JwtPayload {
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    private configService: ConfigService,
+    configService: ConfigService,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
   ) {
     const secret = configService.get<string>('jwt.accessSecret');
+    
     if (!secret) {
-      throw new Error('JWT access secret not configured');
+      throw new Error(
+        'JWT_ACCESS_SECRET is not defined in environment variables',
+      );
     }
 
     super({
