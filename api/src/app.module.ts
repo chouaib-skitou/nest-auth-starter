@@ -13,6 +13,8 @@ import { AuthModule } from './auth/auth.module';
 import { MailModule } from './mail/mail.module';
 import databaseConfig from './config/database.config';
 import appConfig from './config/app.config';
+import jwtConfig from './config/jwt.config';
+import mailConfig from './config/mail.config';
 import securityConfig from './config/security.config';
 import throttlerConfig from './config/throttler.config';
 
@@ -20,7 +22,14 @@ import throttlerConfig from './config/throttler.config';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, appConfig, securityConfig, throttlerConfig],
+      load: [
+        databaseConfig,
+        appConfig,
+        jwtConfig,
+        mailConfig,
+        securityConfig,
+        throttlerConfig,
+      ],
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -34,12 +43,14 @@ import throttlerConfig from './config/throttler.config';
     }),
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => [
-        {
-          ttl: configService.get<number>('throttler.ttl') ?? 60000,
-          limit: configService.get<number>('throttler.limit') ?? 20,
-        },
-      ],
+      useFactory: (configService: ConfigService) => ({
+        throttlers: [
+          {
+            ttl: configService.get<number>('throttler.ttl', 60000),
+            limit: configService.get<number>('throttler.limit', 20),
+          },
+        ],
+      }),
     }),
     EventEmitterModule.forRoot(),
     UsersModule,
